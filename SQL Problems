@@ -1,0 +1,49 @@
+-- Practice Problems showing the question first followed by my SQL query. Please Check them out!
+
+/*Return all fields from shippers*/ --SELECT * FROM shippers ;
+
+/* All fields of Categories with only two columns */ --SELECT CategoryName, Description  FROM Categories ; 
+
+/* Just firstname, lastname, hiredate who are sales reps */ --SELECT FirstName, LastName, HireDate  FROM employees WHERE Title = 'Sales Representative';
+
+/* Same as before but who live in the USA */ -- SELECT FirstName, LastName, HireDate   FROM employees WHERE Title = 'Sales Representative' AND Country = 'USA';
+
+/* All orders placed by EmployeeID 5 */ -- SELECT OrderID, OrderDate FROM orders WHERE EmployeeID = '5';
+
+/* In suppliers table .. show SupplierId, ContactName, ContactTitle for those whose ContactTitle is not Marketing Manager */ --SELECT SupplierID, ContactName, ContactTitle FROM suppliers WHERE NOT ContactTitle = 'Marketing Manager';
+
+/* In products table , see ProductID and ProductName where ProductName includes string "queso" */ -- SELECT ProductID, ProductName  FROM products WHERE ProductName LIKE '%Queso%' ;
+
+/* Query showing OrderID, CustomerID, and ShipCountry where ShipCountry is either France or Belgium */ -- SELECT OrderID, CustomerID, ShipCountry  FROM orders WHERE ShipCountry = 'France' OR ShipCountry ='Belgium'; 
+
+/* Show all orders from Latin America */ -- SELECT OrderID, CustomerID, ShipCountry FROM orders WHERE ShipCountry IN ('Brazil', 'Mexico', 'Argentina', 'Venezuela');
+
+/* Order all Employees by BirthDate with oldes first and having columns FirstName, LastName, Title, BirthDate */ -- SELECT FirstName, LastName, Title, BirthDate FROM employees ORDER BY BirthDate ASC ;
+
+
+/* SHow a list of countries where Northwind company has customers */ -- SELECT DISTINCT Country FROM customers   ; 
+
+/* SHow list of all different values in Customers Table for ContactTitles. Include a count for each... */ -- SELECT ContactTitle, COUNT(*) AS TotalContactTitle FROM customers GROUP BY ContactTitle ORDER BY TotalContactTitle DESC;
+
+/* Show ProductID, ProductName, and Supplier name.. Use the Join clause for suppliers to products table */ --  SELECT ProductID, ProductName, CompanyName AS Supplier FROM products AS p JOIN suppliers AS s ON p.SupplierID = s.SupplierID  ;
+
+/* List of orders made including the Shipper.. Show OrderID, OrderDate, CompanyName of the Shipper and sort by OrderID. Show rows OrderID less than 10270 */
+
+--SELECT OrderID, OrderDate, CompanyName AS Shipper FROM orders JOIN shippers ON orders.ShipVia = shippers.ShipperID WHERE OrderID < 10270;
+
+/* Total number of products in each category. Sort results by total number of products in descending order */ -- SELECT CategoryName, COUNT(*) AS TotalProducts FROM products JOIN categories ON products.CategoryID = categories.CategoryID GROUP BY CategoryName ORDER BY TotalProducts DESC;
+
+/* In Customers table, show total number of customers per Country and City */ -- SELECT Country, City, COUNT(*) AS TotalCustomers FROM customers GROUP BY Country, City ORDER BY TotalCustomers DESC ;
+
+
+
+
+
+
+
+
+
+
+
+
+
