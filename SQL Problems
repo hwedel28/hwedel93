@@ -33,13 +33,95 @@
 
 /* Total number of products in each category. Sort results by total number of products in descending order */ -- SELECT CategoryName, COUNT(*) AS TotalProducts FROM products JOIN categories ON products.CategoryID = categories.CategoryID GROUP BY CategoryName ORDER BY TotalProducts DESC;
 
-/* In Customers table, show total number of customers per Country and City */ -- SELECT Country, City, COUNT(*) AS TotalCustomers FROM customers GROUP BY Country, City ORDER BY TotalCustomers DESC ;
+17. /* In Customers table, show total number of customers per Country and City */ -- SELECT Country, City, COUNT(*) AS TotalCustomers FROM customers GROUP BY Country, City ORDER BY TotalCustomers DESC ;
 
 
 
+/* 29 .. Show employee and Order Detail info like below. Sort by OrderID and ProductID */ -- SELECT e.EmployeeID, e.LastName, od.OrderID, p.ProductName, od.Quantity FROM employees AS e JOIN orders AS o ON e.EmployeeID = o.EmployeeID JOIN OrderDetails AS od ON o.OrderID = od.OrderID JOIN products AS p ON od.ProductID = p.ProductID ;
+
+/* Show all customers who have placed no orders */ -- SELECT c.CustomerID, o.CustomerID FROM customers AS c LEFT JOIN orders AS o ON o.CustomerID = c.CustomerID WHERE o.CustomerID IS NULL; 
+
+/* Show only customers who have never placed an order with Margaret Peacock */ -- SELECT DISTINCT o.CustomerID FROM customers AS c LEFT JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN employees AS e ON o.EmployeeID = e.EmployeeID WHERE o.CustomerID NOT IN (SELECT c.CustomerID FROM customers AS c LEFT JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN employees AS e ON o.EmployeeID = e.EmployeeID  WHERE e.EmployeeID = 4); 
 
 
+/* Consider orders made only in 2016, select all customers who have bought an order worth 10,000 >= */ -- SELECT c.CustomerID, c.CompanyName, o.OrderID, (SUM(od.UnitPrice * od.Quantity)) AS TotalOrderAmount FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID  GROUP BY c.CustomerID, c.CompanyName, o.OrderID ORDER BY TotalOrderAmount  DESC ; 
 
+/* Same question as above except customers who have orders more than 15000 and in 2016 */ 
+ -- SELECT  c.CustomerID, c.CompanyName, o.OrderID, (SUM(od.UnitPrice * od.Quantity)) AS TotalOrderAmount FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID WHERE o.OrderDate >= '20160101' AND o.Orderdate < '20170101'  GROUP BY c.CustomerID, c.CompanyName, o.OrderID HAVING SUM(Quantity * UnitPrice) >15000 ORDER BY TotalOrderAmount  DESC ;
+
+/* 34.  Change answer to use the discount when calculating high value customers . Order by total amount. */ -- SELECT  c.CustomerID, c.CompanyName, o.OrderID, (SUM(od.UnitPrice * od.Quantity)) AS TotalOrderAmount FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID WHERE o.OrderDate >= '20160101' AND o.Orderdate < '20170101'  GROUP BY c.CustomerID, c.CompanyName, o.OrderID HAVING SUM(Quantity * UnitPrice) >15000 ORDER BY TotalOrderAmount  DESC ;
+
+
+/* Change answer to use the discount when calculating high value customers . Order by total amount. */
+ -- SELECT  c.CustomerID, c.CompanyName, o.OrderID, (SUM(od.UnitPrice * od.Quantity)) AS TotalOrderAmount_Without_Discount, (SUM(od.UnitPrice * od.Quantity * (1 - od.Discount))) AS TotalOrderAmount_With_Discount FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID WHERE o.OrderDate >= '20160101' AND o.Orderdate < '20170101'  GROUP BY c.CustomerID, c.CompanyName, o.OrderID HAVING SUM(Quantity * UnitPrice * (1-Discount)) >15000 ORDER BY TotalOrderAmount_With_Discount   DESC ;
+
+/* Show all orders made on the last day of the month. Order by EmployeeID and OrderID */ -- SELECT EmployeeID, OrderID, OrderDate  FROM orders WHERE OrderDate = EOMONTH(OrderDate) ORDER BY EmployeeID, OrderID  ;
+
+/* Show the 10 orders with the most line items, in order of total line items */ -- SELECT OrderID, COUNT(*) AS TotalOrderDetails FROM OrderDetails GROUP BY OrderID ORDER BY TotalOrderDetails DESC ;
+
+/* Show a random set of 2% of all orders */ -- SELECT TOP 2 Percent OrderID FROM orders ORDER BY NewID() ;
+
+/* Show all OrderID's with a quantity of 60 or more. We are trying to spot a duplicate order accidentally entered into the system with different ProductID. */ -- SELECT OrderID, COUNT(*) AS HI FROM orderdetails WHERE Quantity >= 60 GROUP BY OrderID, Quantity HAVING COUNT(*) > 1 ORDER BY OrderID ASC; 
+
+/* 39.  Show details of the order from the previous question.. for orders that match the above criteria */ -- SELECT * FROM OrderDetails WHERE OrderID in (SELECT OrderID FROM orderdetails WHERE Quantity >= 60 GROUP BY OrderID, Quantity HAVING COUNT(*) > 1) ORDER BY OrderID, Quantity  ; 
+
+/* Correct SQL below (SELECT od.OrderID, ProductID, UnitPrice, Quantity, Discount FROM OrderDetails JOIN (SELECT OrderID FROM OrderDetails WHERE Quantity >= 60 GROUP BY OrderID, Quantity HAVING COUNT(*) > 1) AS PotentialProblemOrders ON PotentialProblemOrders.OrderID = OrderDetails.OrderID ORDER BY OrderID, ProductID) from 20 rows to 16 instead  */
+/* 40.  Needed the distinct first */ 
+-- SELECT OrderDetails.OrderID, ProductID, UnitPrice, Quantity, Discount FROM OrderDetails JOIN (SELECT DISTINCT OrderID FROM OrderDetails WHERE Quantity >= 60 GROUP BY OrderID, Quantity HAVING COUNT(*) > 1) AS PotentialProblemOrders ON PotentialProblemOrders.OrderID = OrderDetails.OrderID ORDER BY OrderID, ProductID ;
+
+/* 41. Show which orders are arriving late.. Sort the results by OrderID */ -- SELECT * FROM orders WHERE RequiredDate < ShippedDate ORDER BY OrderID ; 
+
+/* 42.  Which salespeople have the most orders arriving late ? */ -- SELECT o.EmployeeID, e.LastName, COUNT(*) AS TotalLateOrders FROM orders AS o JOIN employees e ON o.EmployeeID = e.EmployeeID WHERE RequiredDate <= ShippedDate GROUP BY o.EmployeeID, e.LastName ORDER BY TotalLateOrders DESC;
+
+/* 43. Show the total number of orders per salesperson that are late and that are on time */ -- (SELECT o.EmployeeID, e.LastName, COUNT(*) AS TotalLateOrders FROM orders AS o JOIN employees e ON o.EmployeeID = e.EmployeeID WHERE RequiredDate <= ShippedDate GROUP BY o.EmployeeID, e.LastName ORDER BY TotalLateOrders DESC;)
+--(SELECT o.EmployeeID, e.LastName, COUNT(*) AS TotalLateOrders FROM orders AS o JOIN employees e ON o.EmployeeID = e.EmployeeID WHERE RequiredDate <= ShippedDate GROUP BY o.EmployeeID, e.LastName ORDER BY TotalLateOrders DESC;) AS LateOrders 
+--(SELECT o.EmployeeID, e.LastName, COUNT(*) AS TotalLateOrders FROM orders AS o JOIN employees e ON o.EmployeeID = e.EmployeeID GROUP BY o.EmployeeID, e.LastName ORDER BY TotalLateOrders DESC;) AS AllOrders
+-- SELECT * FROM (SELECT o.EmployeeID AS os, e.LastName, COUNT(*) AS TotalLateOrders FROM orders AS o JOIN employees e ON o.EmployeeID = e.EmployeeID WHERE RequiredDate <= ShippedDate GROUP BY o.EmployeeID, e.LastName ) AS LateOrders JOIN (SELECT o.EmployeeID AS EmployeeID, COUNT(*) AS TotalOrders FROM orders AS o JOIN employees e ON o.EmployeeID = e.EmployeeID GROUP BY o.EmployeeID, e.LastName ) AS AllOrders ON LateOrders.TotalLateOrders = AllOrders.EmployeeID ; 
+
+/* 44.  SHow a list of all employees who have taken orders, late and all together */ -- SELECT employees.EmployeeID, employees.LastName, AllOrders.TotalOrders, LateOrders.TotalLateOrders  FROM employees JOIN (SELECT o.EmployeeID AS EmployeeID, COUNT(*) AS TotalOrders FROM orders AS o  JOIN employees e ON o.EmployeeID = e.EmployeeID GROUP BY o.EmployeeID, e.LastName ) AS AllOrders ON employees.EmployeeID = AllOrders.EmployeeID LEFT JOIN  (SELECT o.EmployeeID AS os, e.LastName, COUNT(*) AS TotalLateOrders FROM orders AS o JOIN employees e ON o.EmployeeID = e.EmployeeID WHERE RequiredDate <= ShippedDate GROUP BY o.EmployeeID, e.LastName ) AS LateOrders ON employees.EmployeeID = LateOrders.os
+-- ORDER BY employees.EmployeeID ;
+
+/* 45. Change null to a 0 in the table list */ 
+--SELECT employees.EmployeeID, employees.LastName, AllOrders.TotalOrders, LateOrders = IsNULL(LateOrders.TotalLateOrders,0)  FROM employees JOIN (SELECT o.EmployeeID AS EmployeeID, COUNT(*) AS TotalOrders FROM orders AS o  JOIN employees e ON o.EmployeeID = e.EmployeeID GROUP BY o.EmployeeID, e.LastName ) AS AllOrders ON employees.EmployeeID = AllOrders.EmployeeID LEFT JOIN  (SELECT o.EmployeeID AS os, e.LastName, COUNT(*) AS TotalLateOrders FROM orders AS o JOIN employees e ON o.EmployeeID = e.EmployeeID WHERE RequiredDate <= ShippedDate GROUP BY o.EmployeeID, e.LastName ) AS LateOrders ON employees.EmployeeID = LateOrders.os
+ --ORDER BY employees.EmployeeID ;
+
+ /* 46. Get the percentages of late orders over total orders */ -- SELECT employees.EmployeeID, employees.LastName, AllOrders.TotalOrders, LateOrders = IsNULL(LateOrders.TotalLateOrders,0), Percent_Late_Orders = ((IsNULL(LateOrders.TotalLateOrders,0)*1.00)/ AllOrders.TotalOrders )  FROM employees JOIN (SELECT o.EmployeeID AS EmployeeID, COUNT(*) AS TotalOrders FROM orders AS o  JOIN employees e ON o.EmployeeID = e.EmployeeID GROUP BY o.EmployeeID, e.LastName ) AS AllOrders ON employees.EmployeeID = AllOrders.EmployeeID LEFT JOIN  (SELECT o.EmployeeID AS os, e.LastName, COUNT(*) AS TotalLateOrders FROM orders AS o JOIN employees e ON o.EmployeeID = e.EmployeeID WHERE RequiredDate <= ShippedDate GROUP BY o.EmployeeID, e.LastName ) AS LateOrders ON employees.EmployeeID = LateOrders.os
+ -- ORDER BY employees.EmployeeID ;
+
+/* 47. Let's cut the decimal point to 2 digits */ -- SELECT employees.EmployeeID, employees.LastName, AllOrders.TotalOrders, LateOrders = IsNULL(LateOrders.TotalLateOrders,0), Percent_Late_Orders = CAST((ROUND(((IsNULL(LateOrders.TotalLateOrders,0)*1.00)/ AllOrders.TotalOrders ), 3)) AS FLOAT) FROM employees JOIN (SELECT o.EmployeeID AS EmployeeID, COUNT(*) AS TotalOrders FROM orders AS o  JOIN employees e ON o.EmployeeID = e.EmployeeID GROUP BY o.EmployeeID, e.LastName ) AS AllOrders ON employees.EmployeeID = AllOrders.EmployeeID LEFT JOIN  (SELECT o.EmployeeID AS os, e.LastName, COUNT(*) AS TotalLateOrders FROM orders AS o JOIN employees e ON o.EmployeeID = e.EmployeeID WHERE RequiredDate <= ShippedDate GROUP BY o.EmployeeID, e.LastName ) AS LateOrders ON employees.EmployeeID = LateOrders.os
+  -- ORDER BY employees.EmployeeID ;
+
+ /* 48. Show only customers who have orders in 2016 and group them into categories from 0-1000, 1000-5000,5000-10000,10000>x... */ -- (SELECT c.CustomerID AS cus, c.CompanyName AS com, SUM(od.UnitPrice * od.Quantity) AS TotalSales FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID WHERE OrderDate LIKE '%2016%' GROUP BY c.CustomerID, c.CompanyName;)
+
+ -- (SELECT lo.cus, lo.com, lo.TotalSales, CustomerGroup = CASE WHEN TotalSales <= 1000 THEN 'Low' WHEN TotalSales <= 5000 AND TotalSales >= 1001 THEN 'Medium' WHEN TotalSales >= 5001 AND TotalSales <= 10000 THEN 'High' WHEN TotalSales > 10000 THEN 'Very High' END  FROM (SELECT c.CustomerID AS cus, c.CompanyName AS com, SUM(od.UnitPrice * od.Quantity) AS TotalSales FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID WHERE OrderDate LIKE '%2016%' GROUP BY c.CustomerID, c.CompanyName) AS lo );
+
+/* 49. In previous problem there is one null value for Maison Dewey. Change this so there are no nulls in the field. */ 
+ --SELECT lo.cus, lo.com, lo.TotalSales, CustomerGroup = CASE WHEN TotalSales <= 1000 THEN 'Low' WHEN TotalSales <= 5000 AND TotalSales >= 1001 THEN 'Medium' WHEN TotalSales >= 5000 AND TotalSales <= 10000 THEN 'High' WHEN TotalSales > 10000 THEN 'Very High' END  FROM (SELECT c.CustomerID AS cus, c.CompanyName AS com, SUM(od.UnitPrice * od.Quantity) AS TotalSales FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID WHERE OrderDate LIKE '%2016%' GROUP BY c.CustomerID, c.CompanyName) AS lo ;
+
+/* 50. Based on above question, show all CustomerGroups and the percentages in each. Sort by total and in descending order. */ 
+ --(SELECT lo.cus, lo.com, lo.TotalSales, CustomerGroup = CASE WHEN TotalSales <= 1000 THEN 'Low' WHEN TotalSales <= 5000 AND TotalSales >= 1001 THEN 'Medium' WHEN TotalSales >= 5000 AND TotalSales <= 10000 THEN 'High' WHEN TotalSales > 10000 THEN 'Very High' END  FROM (SELECT c.CustomerID AS cus, c.CompanyName AS com, SUM(od.UnitPrice * od.Quantity) AS TotalSales FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID WHERE OrderDate LIKE '%2016%' GROUP BY c.CustomerID, c.CompanyName) AS lo ;
+
+-- SELECT lo.cus, lo.com, lo.TotalSales, CustomerGroup = CASE WHEN TotalSales <= 1000 THEN 'Low' WHEN TotalSales <= 5000 AND TotalSales >= 1001 THEN 'Medium' WHEN TotalSales >= 5000 AND TotalSales <= 10000 THEN 'High' WHEN TotalSales > 10000 THEN 'Very High' END  FROM (SELECT c.CustomerID AS cus, c.CompanyName AS com, SUM(od.UnitPrice * od.Quantity) AS TotalSales FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID WHERE OrderDate LIKE '%2016%' GROUP BY c.CustomerID, c.CompanyName) AS lo ;
+
+-- SELECT customers.CustomerID, customers.CompanyName, TotalOrderAmount = SUM(Quantity * UnitPrice) FROM customers JOIN orders ON orders.CustomerID = customers.CustomerID JOIN orderdetails ON orders.OrderID = orderdetails.OrderID WHERE OrderDate LIKE '%2016%' GROUP BY customers.CustomerID, customers.CompanyName ;
+
+/* 51, Show all defined CustomerGroups the tally of each value and the percentages in each. Sort by the total in each group, descending */
+--SELECT customers.CustomerID, customers.CompanyName, TotalOrderAmount = SUM(Quantity * UnitPrice) into CustomerGrouping
+-- FROM customers JOIN orders ON orders.CustomerID = customers.CustomerID JOIN orderdetails ON orders.OrderID = orderdetails.OrderID WHERE OrderDate LIKE '%2016%'
+-- GROUP BY customers.CustomerID, customers.CompanyName ;
+ -- SELECT  CustomerGroup, COUNT(*) AS TotalInGroup, PercentageInGroup = (COUNT(*) * 1.0) / (SELECT COUNT(*) FROM CustomerGroup ) FROM CustomerGroup GROUP BY CustomerGroup ORDER BY TotalInGroup DESC;
+
+/* 52. Show list of countries used from suppliers and customers */ -- SELECT Country FROM Suppliers UNION  SELECT Country FROM Customers ORDER BY Country ; 
+
+/* 53. Show a list of countries divided into a supplier and country list */ 
+SELECT SupplierList.Country, SupplierList.TotalSuppliers, CustomerList.TotalCustomers AS TotalCustomers FROM SupplierList FULL OUTER JOIN CustomerList ON SupplierList.Country = CustomerList.Country ;
+
+/* 54. Show list of countries divided into a supplier and country list EXCLUDING the null and replacing with a zero */ 
+-- SELECT SupplierList.Country, SupplierList.TotalSuppliers, ISNULL(CustomerList.TotalCustomers, 0) AS TotalCustomers FROM SupplierList FULL OUTER JOIN CustomerList ON SupplierList.Country = CustomerList.Country ;
+
+/* 55. Show a list of countries including the earliest order created with the ShipCountry, CustomerID, OrderID, and OrderDate */ 
+--SELECT ShipCountry, CustomerID, OrderID, OrderDate = convert(date, OrderDate), RowNumberPerCountry = Row_Number() OVER (PARTITION BY ShipCountry ORDER BY ShipCountry, OrderID) INTO ListOrders  FROM orders ;
+-- SELECT ShipCountry, CustomerID, OrderID, OrderDate, RowNumberPerCountry FROM ListOrders WHERE RowNumberPerCountry = 1 ORDER BY ShipCountry   ;
 
 
 
