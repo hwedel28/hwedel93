@@ -1,4 +1,5 @@
--- Practice Problems showing the question first followed by my SQL query. Please Check them out!
+-- Practice Problems I solved using a database downloaded from this website https://sqlpracticeproblems.com/Resources/. 
+Showing the question first followed by my SQL query. Please Check them out! Thanks !
 
 /*Return all fields from shippers*/ --SELECT * FROM shippers ;
 
