@@ -35,7 +35,31 @@
 
 17. /* In Customers table, show total number of customers per Country and City */ -- SELECT Country, City, COUNT(*) AS TotalCustomers FROM customers GROUP BY Country, City ORDER BY TotalCustomers DESC ;
 
+/* 18. Show the ProductID, ProductName, and the CompanyName of Supplier */ --SELECT products.ProductID, products.ProductName, suppliers.CompanyName AS Supplier FROM products JOIN suppliers ON products.SupplierID = suppliers.SupplierID ;
 
+/* 19. Show a list of orders. Showing OrerID, OrderDate, CompanyName of shipper, and sort by OrderID. Show only rows with OrderID < 10270 */ 
+--SELECT OrderID, OrderDate, CompanyName AS Shipper FROM orders JOIN shippers ON orders.ShipVia = shippers.ShipperID ; 
+
+/* 20. SHow total number of products in each category. Sort by total products in descending order */ -- SELECT categories.CategoryName, COUNT(*) AS TotalProducts FROM products JOIN categories ON products.CategoryID = categories.CategoryID GROUP BY categories.CategoryName ORDER BY TotalProducts DESC; 
+
+/* 21. Show the total number of customers per Country and City */ --SELECT Country, City, COUNT(*) AS TotalCustomers  FROM customers GROUP BY Country, City ORDER BY TotalCustomers DESC ; 
+
+/* 22. Products in inventory that should be reordered using UnitsInStock and ReorderLevel, Where UnitsInStock < ReorderLevel */ -- SELECT ProductID, ProductName, UnitsInStock, ReorderLevel FROM products  WHERE UnitsInStock <= ReorderLevel ; 
+
+/* Incorporate these columns in query, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued --- UnitsInStock + UnitsOnOrder <=ReorderLevel, The Discontinued flag is false(0) */ 
+--SELECT ProductID, ProductName, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued FROM products WHERE UnitsInStock + UnitsOnOrder <= ReorderLevel AND Discontinued = 0;
+
+/* Set the columns to CustomerID, CompanyName, Region , where NULL Region is at the bottom. Within same regions companies should be sorted by CustomerID */
+--SELECT CustomerID, CompanyName, Region FROM customers  ORDER BY  CASE WHEN Region is  NULL THEN 1 ELSE 0 END  , Region, CustomerID DESC; 
+
+/* 25.  Return the three ship countries with  the highest average freight overall, in descending order by average freight */ SELECT * FROM employees ;
+
+/* 26. Return the three ship countries with  the highest average freight overall, in descending order by average freight */ -- SELECT TOP 3 ShipCountry, AVG(Freight) AS AverageFreight FROM orders GROUP BY ShipCountry ORDER BY AverageFreight DESC;
+
+/* 27. Same question as above but only orders from the year 2015 */ -- SELECT TOP 3 ShipCountry, AVG(Freight) AS AverageFreight FROM orders WHERE OrderDate LIKE '%2015%' GROUP BY ShipCountry ORDER BY AverageFreight DESC ;
+
+/* 28. Now get 3 ship countries with highest average freight charge.. Use last 12 months of order data */ 
+-- SELECT TOP 3 ShipCountry, AVG(Freight) AS AverageFreight FROM orders WHERE OrderDate >= Dateadd(yy, -1, (SELECT MAX(OrderDate) FROM orders)) GROUP BY ShipCountry ORDER BY AverageFreight DESC ;
 
 /* 29 .. Show employee and Order Detail info like below. Sort by OrderID and ProductID */ -- SELECT e.EmployeeID, e.LastName, od.OrderID, p.ProductName, od.Quantity FROM employees AS e JOIN orders AS o ON e.EmployeeID = o.EmployeeID JOIN OrderDetails AS od ON o.OrderID = od.OrderID JOIN products AS p ON od.ProductID = p.ProductID ;
 
