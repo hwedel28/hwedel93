@@ -1,1 +1,46 @@
-hey
+/* 19. Show a list of orders. Showing OrerID, OrderDate, CompanyName of shipper, and sort by OrderID. Show only rows with OrderID < 10270 */ 
+--SELECT OrderID, OrderDate, CompanyName AS Shipper FROM orders JOIN shippers ON orders.ShipVia = shippers.ShipperID ; 
+
+/* 20. SHow total number of products in each category. Sort by total products in descending order */ -- SELECT categories.CategoryName, COUNT(*) AS TotalProducts FROM products JOIN categories ON products.CategoryID = categories.CategoryID GROUP BY categories.CategoryName ORDER BY TotalProducts DESC; 
+
+/* 21. Show the total number of customers per Country and City */ --SELECT Country, City, COUNT(*) AS TotalCustomers  FROM customers GROUP BY Country, City ORDER BY TotalCustomers DESC ; 
+
+/* 22. Products in inventory that should be reordered using UnitsInStock and ReorderLevel, Where UnitsInStock < ReorderLevel */ -- SELECT ProductID, ProductName, UnitsInStock, ReorderLevel FROM products  WHERE UnitsInStock <= ReorderLevel ; 
+
+/* Incorporate these columns in query, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued --- UnitsInStock + UnitsOnOrder <=ReorderLevel, The Discontinued flag is false(0) */ 
+--SELECT ProductID, ProductName, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued FROM products WHERE UnitsInStock + UnitsOnOrder <= ReorderLevel AND Discontinued = 0;
+
+/* Set the columns to CustomerID, CompanyName, Region , where NULL Region is at the bottom. Within same regions companies should be sorted by CustomerID */
+--SELECT CustomerID, CompanyName, Region FROM customers  ORDER BY  CASE WHEN Region is  NULL THEN 1 ELSE 0 END  , Region, CustomerID DESC; 
+
+/* 25.  Return the three ship countries with  the highest average freight overall, in descending order by average freight */ SELECT * FROM employees ;
+
+/* 26. Return the three ship countries with  the highest average freight overall, in descending order by average freight */ -- SELECT TOP 3 ShipCountry, AVG(Freight) AS AverageFreight FROM orders GROUP BY ShipCountry ORDER BY AverageFreight DESC;
+
+/* 27. Same question as above but only orders from the year 2015 */ -- SELECT TOP 3 ShipCountry, AVG(Freight) AS AverageFreight FROM orders WHERE OrderDate LIKE '%2015%' GROUP BY ShipCountry ORDER BY AverageFreight DESC ;
+
+/* 28. Now get 3 ship countries with highest average freight charge.. Use last 12 months of order data */ 
+-- SELECT TOP 3 ShipCountry, AVG(Freight) AS AverageFreight FROM orders WHERE OrderDate >= Dateadd(yy, -1, (SELECT MAX(OrderDate) FROM orders)) GROUP BY ShipCountry ORDER BY AverageFreight DESC ;
+
+/* 29 .. Show employee and Order Detail info like below. Sort by OrderID and ProductID */ -- SELECT e.EmployeeID, e.LastName, od.OrderID, p.ProductName, od.Quantity FROM employees AS e JOIN orders AS o ON e.EmployeeID = o.EmployeeID JOIN OrderDetails AS od ON o.OrderID = od.OrderID JOIN products AS p ON od.ProductID = p.ProductID ;
+
+/* Show all customers who have placed no orders */ -- SELECT c.CustomerID, o.CustomerID FROM customers AS c LEFT JOIN orders AS o ON o.CustomerID = c.CustomerID WHERE o.CustomerID IS NULL; 
+
+/* Show only customers who have never placed an order with Margaret Peacock */ -- SELECT DISTINCT o.CustomerID FROM customers AS c LEFT JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN employees AS e ON o.EmployeeID = e.EmployeeID WHERE o.CustomerID NOT IN (SELECT c.CustomerID FROM customers AS c LEFT JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN employees AS e ON o.EmployeeID = e.EmployeeID  WHERE e.EmployeeID = 4); 
+
+
+/* Consider orders made only in 2016, select all customers who have bought an order worth 10,000 >= */ -- SELECT c.CustomerID, c.CompanyName, o.OrderID, (SUM(od.UnitPrice * od.Quantity)) AS TotalOrderAmount FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID  GROUP BY c.CustomerID, c.CompanyName, o.OrderID ORDER BY TotalOrderAmount  DESC ; 
+
+/* Same question as above except customers who have orders more than 15000 and in 2016 */ 
+ -- SELECT  c.CustomerID, c.CompanyName, o.OrderID, (SUM(od.UnitPrice * od.Quantity)) AS TotalOrderAmount FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID WHERE o.OrderDate >= '20160101' AND o.Orderdate < '20170101'  GROUP BY c.CustomerID, c.CompanyName, o.OrderID HAVING SUM(Quantity * UnitPrice) >15000 ORDER BY TotalOrderAmount  DESC ;
+
+/* 34.  Change answer to use the discount when calculating high value customers . Order by total amount. */ -- SELECT  c.CustomerID, c.CompanyName, o.OrderID, (SUM(od.UnitPrice * od.Quantity)) AS TotalOrderAmount FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID WHERE o.OrderDate >= '20160101' AND o.Orderdate < '20170101'  GROUP BY c.CustomerID, c.CompanyName, o.OrderID HAVING SUM(Quantity * UnitPrice) >15000 ORDER BY TotalOrderAmount  DESC ;
+
+
+/* Change answer to use the discount when calculating high value customers . Order by total amount. */
+ -- SELECT  c.CustomerID, c.CompanyName, o.OrderID, (SUM(od.UnitPrice * od.Quantity)) AS TotalOrderAmount_Without_Discount, (SUM(od.UnitPrice * od.Quantity * (1 - od.Discount))) AS TotalOrderAmount_With_Discount FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID JOIN orderdetails AS od ON o.OrderID = od.OrderID WHERE o.OrderDate >= '20160101' AND o.Orderdate < '20170101'  GROUP BY c.CustomerID, c.CompanyName, o.OrderID HAVING SUM(Quantity * UnitPrice * (1-Discount)) >15000 ORDER BY TotalOrderAmount_With_Discount   DESC ;
+
+/* Show all orders made on the last day of the month. Order by EmployeeID and OrderID */ -- SELECT EmployeeID, OrderID, OrderDate  FROM orders WHERE OrderDate = EOMONTH(OrderDate) ORDER BY EmployeeID, OrderID  ;
+
+/* Show the 10 orders with the most line items, in order of total line items */ -- SELECT OrderID, COUNT(*) AS TotalOrderDetails FROM OrderDetails GROUP BY OrderID ORDER BY TotalOrderDetails DESC ;
+
