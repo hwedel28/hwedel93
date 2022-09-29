@@ -1,0 +1,78 @@
+/******** SQL problems from the book, "The Big Book Of SQL Queries: 250+ SQL Practice Queries: SQL Series Volume 6" by Indera E. Murphy. ********/
+
+/* 1. How many orders are in the Orders table? */ --SELECT COUNT(*) AS TotalOrders FROM orders ;
+/* 2. Count the number of orders shipped by year */ --SELECT ShipperID, ShipVia, YEAR(ShipDate) AS ShipYear, COUNT(*) AS NbrOfOrdersShipped FROM orders  GROUP BY ShipVia, ShipperID, YEAR(ShipDate)ORDER BY ShipYear, ShipperID ASC ; 
+
+/* 3. Modify query 2 to only select groups that meet specific critieria */ 
+--SELECT ShipperID, ShipVia, YEAR(ShipDate) AS ShipYear, COUNT(*) AS NbrOfOrdersShipped FROM orders WHERE Shipped = 'TRUE' GROUP BY ShipVia, ShipperID, YEAR(ShipDate) HAVING  COUNT(*) >= 200 ORDER BY ShipYear, ShipperID ASC ; 
+
+/* 4. What is each customers smallest and largest order total? */ -- SELECT CustomerID, MIN(OrderAmount) AS Minimum, MAX(OrderAmount) AS Maximium FROM orders GROUP BY CustomerID ORDER BY CustomerID;
+
+/* 5. Modify query 4 to display the customer name. */ --SELECT CustomerID, MIN(OrderAmount) AS Minimum, MAX(OrderAmount) AS Maximium FROM orders GROUP BY CustomerID ORDER BY CustomerID;
+-- SELECT CONCAT(FirstName, ' ', LastName) AS 'FullName', MIN(OrderAmount) AS Minimum, MAX(OrderAmount) AS Maximium  FROM orders AS o JOIN customers AS c ON o.CustomerID = c.CustomerID GROUP BY LastName, FirstName  ;
+
+/* 6. Find the next order number */ -- SELECT OrderID, (SELECT MIN(t2.OrderID) FROM orders AS t2 WHERE t2.OrderID > t1.OrderID) AS NextOrderID, CustomerID, OrderDate, OrderAmount FROM orders AS t1 ; 
+
+/* 7. Create a list of customers that have ordered a specific product. */  
+--SELECT DISTINCT c.CustomerID, CONCAT(c.FirstName, ' ', c.Lastname) AS CustomerName  FROM orderdetails AS od JOIN orders AS o ON od.OrderID = o.OrderID JOIN customers AS c ON o.CustomerID = c.CustomerID WHERE od.ProductID = 7024 OR od.ProductID = 7020 ; 
+
+/* 8. Group orders by who shipped the order */ -- SELECT ShipperID, COUNT(*) AS OrdersShipped FROM orders  GROUP BY ShipperID ORDER BY ShipperID ASC;
+
+/* 9. Modify query 8 to include more data */ -- SELECT ShipperID, YEAR(OrderDate) AS YearShipped,  COUNT(*) AS OrdersShipped FROM orders  GROUP BY ShipperID, YEAR(OrderDate) ORDER BY ShipperID, YEAR(OrderDate) ASC;
+
+/* 10. Find customers that placed an order in 2017 */ -- SELECT CustomerID, CONCAT(FirstName, ' ', LastName) FROM customers WHERE Country != 'USA' AND  OrderDate LIKE '%2016%' ; 
+
+/* 11. Display dates in different formats. */ --SELECT OrderDate, FORMAT(OrderDate, 'd') AS ShortDate, FORMAT(OrderDate, 'D') AS LongDate, FORMAT(OrderDate, 'F') AS LongDateAndTime, FORMAT(OrderDate, 'M') AS MonthAndDay, FORMAT(OrderDate, 'Y') AS YearAndMonth  FROM orders ; 
+
+/* 12. Create quarterly order totals by year */ -- SELECT YEAR(OrderDate) AS 'OrderYear', DATEPART(QUARTER, OrderDate) AS 'Quarterz', COUNT(OrderID) AS 'Nbr_Of_Orders', FORMAT(SUM(OrderAmount), 'C') AS 'Total_Order_$_Amt_For_Quarter', FORMAT(AVG(OrderAmount), 'C') AS 'Avg_order' FROM orders GROUP BY YEAR(OrderDate), DATEPART(QUARTER, OrderDate) ORDER BY YEAR(OrderDate), DATEPART(QUARTER, OrderDate); 
+
+/* 13. Create a view based on the order details table */ -- SELECT od.OrderID, od.ProductID, p.ProductCategoryID, p.SubCategoryID FROM orderdetails AS od JOIN products AS p ON od.ProductID = p.ProductID ;
+
+/* 14. Filter the orders in 2018 using data range criteria */ -- SELECT OrderID, OrderDate, OrderAmount FROM orders WHERE YEAR(OrderDate) = 2018 AND (OrderDate NOT BETWEEN '2018-04-01' AND '2018-09-30') ORDER BY OrderDate ; 
+
+/* 15. Evaluate multiple columns for null values */ -- SELECT ProductID, ProductName, RetailPrice, UnitCost, ShippingCost, COALESCE(RetailPrice, UnitCost, ShippingCost) AS EvaluationCost FROM products ; 
+
+/* 16. Create a list of employees by department */--  SELECT d.DeptID, d.DeptName, sr.SalesRep FROM dept AS d JOIN salesreps AS sr ON d.DeptID = sr.DeptID ORDER BY d.DeptID ;
+
+/* 17. Calculate the number of days that orders were shipped late */ -- SELECT OrderID, OrderAmount, FORMAT(RequiredDate, 'd') AS RequiredDate, FORMAT(ShipDate, 'd') AS ShipDate, DATEDIFF(d, RequiredDate, ShipDate) AS DaysLate  FROM orders WHERE ShipDate > RequiredDate ;
+
+/* 18. Which customer orders were shipped late? */ -- SELECT c.CustomerID, c.FirstName, c.LastName, COUNT(*) AS OrdersShippedLate FROM orders AS o JOIN customers AS c ON o.CustomerID = c.CustomerID WHERE FORMAT(ShipDate, 'd') > FORMAT(RequiredDate, 'd') GROUP BY c.CustomerID, c.FirstName, c.LastName ORDER BY c.LastName ASC;
+
+/* 19. Create a list of orders placed in 2018 */ -- SELECT OrderID, OrderDate AS DateOrdered, OrderAmount FROM orders WHERE YEAR(OrderDate) = 2018 AND (OrderDate NOT BETWEEN '2018-03-01' AND '2018-03-31') ORDER BY DateOrdered;
+
+/* 20. Display a list of companies in Canada */ -- SELECT CompanyName, LastYearsTotalOrderAmount FROM customers WHERE Country = 'Canada' ORDER BY CompanyName ;
+
+/* 21. Calculate the number of orders that are shipped daily */ -- SELECT DAY(ShipDate) AS June_2017, COUNT(*) AS #_Of_Orders_Shipped, SUM(OrderAmount) AS Of_Orders_Shipped FROM orders WHERE ShipDate BETWEEN '06-01-2017' AND '06/30/2017' GROUP BY DAY(ShipDate) ORDER BY June_2017 ;
+
+/* 22. Find the end of month dates. */ -- SELECT ShipDate, ShipDate AS ThisMonth, EOMONTH(ShipDate, 1) AS NextMonth, EOMONTH(ShipDate, -1) AS LastMonth, EOMONTH(ShipDate, 3) AS DreiMonthsForward, EOMONTH(ShipDate, 6) AS SechsMonthsForward FROM orders ORDER BY ShipDate;
+
+/* 23. Find orders that were placed on the last day of the month */ 
+-- SELECT CONCAT(c.FirstName, ' ', c.LastName) AS CustomerName, o.OrderID, EOMONTH(o.OrderDate) AS EOMOrderDate, OrderAmount AS OrderTotal FROM orders AS o JOIN customers AS c ON o.CustomerID = c.CustomerID ORDER BY o.OrderDate, OrderID ;
+
+/* 24. Create a list of employees that were hired on or after January 1, 2008 */ -- SELECT CONCAT(FirstName, ' ', LastName) AS SalesRep, Position, FORMAT(HireDate, 'd') AS DateHired FROM salesreps ;
+
+/* 25. Which product has been purchased the most number of times? */ -- SELECT TOP 1 p.ProductID, p.ProductName, COUNT(ProductName) AS TimesPurchased, SUM(Quantity) AS QtySold FROM orderdetails AS od JOIN products AS p ON od.ProductID = p.ProductID GROUP BY p.ProductID, p.ProductName ORDER BY TimesPurchased DESC ; 
+
+/* 26. Find each sales reps largest sale in September 2017 */ -- SELECT  s.SalesRepID, s.SalesRep, MAX(OrderAmount) AS maxamount FROM orders AS o JOIN salesreps AS s ON o.SalesRepID = s.SalesRepID WHERE OrderDate BETWEEN '9/1/2017' AND '9/30/2017' GROUP BY s.SalesRepID, s.SalesRep  ;
+
+/* 27. Find missing values */ -- SELECT ProductName, Size FROM products WHERE Size IS NULL  ; 
+
+/* 28. Create multiple group filters */  --SELECT c.CustomerID, c.CompanyName, o.OrderID,  COUNT(*) AS ItemsOnOrder, SUM(od.UnitPrice * od.Quantity) AS OrderTotal, OrderDate FROM orderdetails AS od LEFT OUTER JOIN orders AS o ON od.OrderID = o.OrderID LEFT OUTER JOIN customers AS c ON o.CustomerID = c.CustomerID GROUP BY o.OrderID, c.CustomerID, c.CompanyName, o.OrderDate HAVING YEAR(o.OrderDate) = 2017 AND SUM(od.UnitPrice * od.Quantity) >= 5000 AND COUNT(od.Quantity) BETWEEN 5 AND 8 ;
+
+/* 29. Check for NULL values */ --SELECT c.CustomerID, c.FirstName, c.LastName FROM customers AS c JOIN regions AS r ON c.RegionID = r.RegionID ; 
+
+/* 30. Create a list of customers in France that have placed an order. */ SELECT DISTINCT c.CustomerID, CONCAT(c.FirstName, ' ', c.LastName) AS CustomerName, COUNT(c.CustomerID) AS Total_Orders FROM customers AS c JOIN orders AS o ON c.CustomerID = o.CustomerID WHERE Country = 'France' GROUP BY  c.CustomerID, CONCAT(c.FirstName, ' ', c.LastName) ORDER BY CustomerName ASC; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
